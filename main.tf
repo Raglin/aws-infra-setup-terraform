@@ -1,6 +1,5 @@
 provider "aws" {
-  access_key = ""
-  secret_key = ""
+  shared_credentials_file = "~/.aws/creds"
   region     = "eu-west-1"
 }
 
