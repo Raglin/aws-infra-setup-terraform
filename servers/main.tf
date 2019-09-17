@@ -2,10 +2,14 @@ terraform {
   backend "s3" {
     # Replace this with your bucket name!
     bucket         = "terraform-state-ebironconcot"
-    key            = "global/bastion/terraform.tfstate"
+    key            = "global/servers/terraform.tfstate"
     region         = "eu-west-1"
     encrypt        = true
   }
+}
+
+provider "aws" {
+  region     = "eu-west-1"
 }
 
 data "terraform_remote_state" "vpc" {
@@ -17,67 +21,54 @@ data "terraform_remote_state" "vpc" {
     }
 }
 
-data "aws_ami" "amazon_linux" {
+data "aws_ami" "ubuntu" {
   most_recent = true
 
-  owners = ["amazon"]
+  owners = ["099720109477"]
 
   filter {
     name = "name"
 
     values = [
-      "amzn2-ami-hvm-2.0.*-x86_64-gp2",
-    ]
-  }
-
-  filter {
-    name = "owner-alias"
-
-    values = [
-      "amazon",
+      "ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-*",
     ]
   }
 }
 
-provider "aws" {
-  region     = "eu-west-1"
-}
+resource "aws_security_group" "ubuntu_sg" {
+  name = "ubuntu_sg"
 
-
-resource "aws_security_group" "bastion_sg" {
-  name = "bastion_sg"
-
-  description = "Bastion security group"
+  description = "Ubuntu security group"
   
   vpc_id = "${data.terraform_remote_state.vpc.outputs.vpc_id}"
 }
 
-resource "aws_security_group_rule" "bastion_ingress_access" {
+resource "aws_security_group_rule" "ubuntu_ingress_access" {
   type = "ingress"
   from_port = 22
   to_port = 22
   protocol = "tcp"
   cidr_blocks = [ "0.0.0.0/0" ]
-  security_group_id = "${aws_security_group.bastion_sg.id}"
+  security_group_id = "${aws_security_group.ubuntu_sg.id}"
 }
 
-resource "aws_security_group_rule" "bastion_egress_access" {
+resource "aws_security_group_rule" "ubuntu_egress_access" {
   type = "egress"
   from_port = 0
   to_port = 65535
   protocol = "tcp"
   cidr_blocks = [ "0.0.0.0/0" ]
-  security_group_id = "${aws_security_group.bastion_sg.id}"
+  security_group_id = "${aws_security_group.ubuntu_sg.id}"
 }
 
 resource "aws_instance" "bastion" {
   instance_type = "t2.micro"
-  vpc_security_group_ids = [ "${aws_security_group.bastion_sg.id}" ]
+  vpc_security_group_ids = [ "${aws_security_group.ubuntu_sg.id}" ]
   associate_public_ip_address = true
   
-  ami = "${data.aws_ami.amazon_linux.id}"
-  availability_zone = "eu-west-1a"
+  ami = "${data.aws_ami.ubuntu.id}"
+  #availability_zone = "eu-west-1a"
   key_name = "raglin-personal-aws"
  
-  subnet_id = "${data.terraform_remote_state.vpc.outputs.public_subnets[0]}"
+  subnet_id = "${data.terraform_remote_state.vpc.outputs.private_subnets[0]}"
 }
