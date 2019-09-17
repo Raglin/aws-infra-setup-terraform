@@ -1,5 +1,14 @@
+terraform {
+  backend "s3" {
+    # Replace this with your bucket name!
+    bucket         = "terraform-state-ebironconcot"
+    key            = "global/vpc/terraform.tfstate"
+    region         = "eu-west-1"
+    encrypt        = true
+  }
+}
+
 provider "aws" {
-  shared_credentials_file = "~/.aws/creds"
   region     = "eu-west-1"
 }
 
