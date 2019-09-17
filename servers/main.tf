@@ -61,10 +61,10 @@ resource "aws_security_group_rule" "ubuntu_egress_access" {
   security_group_id = "${aws_security_group.ubuntu_sg.id}"
 }
 
-resource "aws_instance" "bastion" {
+resource "aws_instance" "ubuntu_server" {
   instance_type = "t2.micro"
   vpc_security_group_ids = [ "${aws_security_group.ubuntu_sg.id}" ]
-  associate_public_ip_address = true
+  associate_public_ip_address = false
   
   ami = "${data.aws_ami.ubuntu.id}"
   #availability_zone = "eu-west-1a"
