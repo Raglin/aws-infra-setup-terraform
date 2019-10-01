@@ -71,4 +71,8 @@ resource "aws_instance" "ubuntu_server" {
   key_name = "raglin-personal-aws"
  
   subnet_id = "${data.terraform_remote_state.vpc.outputs.private_subnets[0]}"
+
+  tags = {
+    Name = "bloomreach-poc"
+  }
 }
